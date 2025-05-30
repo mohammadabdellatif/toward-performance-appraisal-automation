@@ -46,9 +46,9 @@ SELECT I.ID,
        regexp_replace(lower(stts.pname), '[( )(/)]+', '_', 'g')    as ISSUE_STATUS,
        cmt.cnt                                                     as issue_comments_count,
        last_change.last_change_date                                as last_change_date
-FROM JIRAISSUE I
+FROM hdissue I
          left join (select count(*) as cnt, issueid
-                    from jiraaction ac
+                    from hdaction ac
                     where actiontype = 'comment'
                     group by issueid) cmt
                    on cmt.issueid = i.id
@@ -79,9 +79,9 @@ select id,
        author,
        actionbody,
        case when rolelevel = 10301 then 1 else 0 end as is_private
-from jiraaction
+from hdaction
 where actiontype = 'comment'
-  and issueid in (select j.id from jiraissue j where j.created between '2021-12-31 23:59:59' and '2022-12-31 23:59:59'
+  and issueid in (select j.id from hdissue j where j.created between '2021-12-31 23:59:59' and '2022-12-31 23:59:59'
    and j.RESOLUTIONDATE is not null)
 order by issueid, created
     """)
@@ -94,8 +94,8 @@ select max_id.i + row_number() over (order by id)                      id,
        j.reporter                                                   as author,
        (case when description is null then '' else description end) as actionbody,
        0                                                            as is_private
-from jiraissue j,
-     (select max(id) as i from jiraaction) max_id
+from hdissue j,
+     (select max(id) as i from hdaction) max_id
 where j.created between '2021-12-31 23:59:59' and '2022-12-31 23:59:59'
   and j.RESOLUTIONDATE is not null
     """)
@@ -109,7 +109,7 @@ where j.created between '2021-12-31 23:59:59' and '2022-12-31 23:59:59'
     @staticmethod
     def comments_summary(): return ('list_issues_comments_summary', """
     select id, issueid, created, author, actionnum
-    from jiraaction
+    from hdaction
     where actiontype = 'comment'
     order by created desc
         """)
